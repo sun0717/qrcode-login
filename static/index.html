@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫码登录</title>
+    <script src="https://unpkg.com/axios@1.5.0/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <img id="img" src="" alt="">
+    <!-- <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BQY4cSRIEQdNA/f/Lun1bPwWQSK8mhzAR/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWiT14C8pvUfBOQSc0EZFIzAZnUTEAmNTdAfpOaN06qFp1ULTqpWvTJMjWbgDwB5Ak1N0CeUDMBmdS8oWYTkE0nVYtOqhadVC365MuAPKHmCSCTmk1qJiCbgExqngDyhJpvOqladFK16KRq0Sf/OCA3aiY1E5BJzQSk/u+katFJ1aKTqkWf/GOAPAFkUjOpuVEzAbkBMqn5l5xULTqpWnRSteiTL1PzN1PzBJAbNU8AmdQ8oeZvclK16KRq0UnVok+WAfmT1ExAJjUTkEnNBGRSMwG5ATKpeQPI3+ykatFJ1aKTqkWfvKTmbwJkUrMJyBNq3lDzX3JSteikatFJ1aJPXgIyqZmAbFIzqfkmNROQGyA3ap4AsknNN51ULTqpWnRSteiTl9R8k5oJyKTmCSCTmgnIjZo3gExqJiBvqHkCyKTmjZOqRSdVi06qFn3yEpBJzRNqJiATkBsgk5oJyKRmAvIEkEnNBORGzRNqJiBvAJnUbDqpWnRSteikahH+yC8C8oSaCcik5gbIjZoJyKTmBsikZgJyo2YCcqNmAnKj5gbIpOaNk6pFJ1WLTqoW4Y/8RYDcqJmAPKFmAjKpmYDcqJmATGqeADKpeQPIjZpNJ1WLTqoWnVQtwh95Acik5gbIpOabgDyh5gkgk5oJyJ+k5gbIpOaNk6pFJ1WLTqoWffLL1NwAuVEzAblRswnIpGYCcqNmAjKpmYBMaiYgk5obIJOaTSdVi06qFp1ULfrky4A8oeYJNW8AmdRMQG6ATGomIG+omYDcAJnU/KaTqkUnVYtOqhZ98oepmYDcqJmATGomIG+omYBMaiYgk5oJyKRmAjKpuVFzA2RS800nVYtOqhadVC36ZBmQJ4DcqJmAbFIzAblRMwGZ1ExAnlAzAZnUTEAmNZOaGyCTmjdOqhadVC06qVqEP/ICkEnNJiA3ap4AsknNnwTkDTWbTqoWnVQtOqla9MmXAZnUPKFmAvKGmgnIjZoJyBNAJjU3QCY1E5An1ExAJiCTmjdOqhadVC06qVr0yZepmYBMam6ATGqeADKpmdTcAJnUTEDeAHID5Ak1E5BJzTedVC06qVp0UrUIf+Q/DMik5gbIpOY3AblR8wSQSc0NkBs1b5xULTqpWnRSteiTl4D8JjWTmjeATGpugExqJiCbgExqboDcqPmmk6pFJ1WLTqoWfbJMzSYgN0AmNU+ouQEyqZmATGomIJOaCciNmjfUTEAmNZtOqhadVC06qVr0yZcBeULNJiBvqJmA3AB5A8gbaiYgk5pvOqladFK16KRq0Sf/GCBPAJnUTEAmNW8AeULNBGRSMwGZ1ExAbtS8cVK16KRq0UnVok/+MWomIJOaGyA3QCY1T6h5AsikZgLyhppNJ1WLTqoWnVQt+uTL1HyTmhs1E5BJzY2aTUDeAHKj5k86qVp0UrXopGrRJ8uA/CYgk5oJyA2QSc0NkDfU3ACZ1ExAJjU3QCY133RSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aL/AWnbQkJfgkePAAAAAElFTkSuQmCC"
+        alt=""> -->
+    <div id="info"></div>
+    <script>
+        axios.get('http://localhost:3000/qrcode/generate').then(res => {
+            document.getElementById('img').src = res.data.img;
+
+            queryStatus(res.data.qrcode_id);
+        })
+
+        function queryStatus(id) {
+            axios.get('http://localhost:3000/qrcode/check?id=' + id).then(res => {
+                const status = res.data.status;
+
+                let content = '';
+                switch(status) {
+                    case 'noscan':
+                        content='未扫码';
+                        break;
+                    case 'scan-wait-confirm':
+                        content='已扫码,等待确认';
+                        break;
+                    case 'scan-confirm':
+                        content='已确认,当前登录用户:' + res.data.userInfo.username;
+                        break;
+                    case 'scan-cancel':
+                        content='已取消';
+                        break;
+                }
+                document.getElementById('info').textContent = content;
+
+                if (status === 'noscan' || status === 'scan-wait-confirm') {
+                    setTimeout(() => queryStatus(id), 1000);
+                }
+            })
+        }
+    </script>
+</body>
+
+</html>
